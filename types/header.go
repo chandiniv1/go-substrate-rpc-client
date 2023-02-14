@@ -29,27 +29,50 @@ type Tuple struct {
 	Start  U32
 	Offset U32
 }
+type AppId UCompact
 
+type DataLookupIndexItem struct {
+	AppId AppId    `json:"appId"`
+	Start UCompact `json:"start"`
+}
 type DataLookup struct {
-	Size  U32     `json:"size"`
-	Index []Tuple `json:"index"`
+	Size  UCompact              `json:"size"`
+	Index []DataLookupIndexItem `json:"index"`
 }
 
-type KateExtrinsicRoot struct {
-	Hash       Hash `json:"hash"`
-	Commitment []U8 `json:"commitment"`
-	Rows       U16  `json:"rows"`
-	Cols       U16  `json:"cols"`
-	DataRoot   H256 `json:"dataRoot"`
+type KateCommitment struct {
+	Rows       UCompact `json:"rows"`
+	Cols       UCompact `json:"cols"`
+	DataRoot   Hash     `json:"dataRoot"`
+	Commitment []U8     `json:"commitment"`
+}
+
+type V1HeaderExtension struct {
+	Commitment KateCommitment `json:"commitment"`
+	AppLookup  DataLookup     `json:"appLookup"`
+}
+type VTHeaderExtension struct {
+	NewField   []U8           `json:"newField"`
+	Commitment KateCommitment `json:"commitment"`
+	AppLookup  DataLookup     `json:"appLookup"`
+}
+
+type HeaderExtensionEnum struct {
+	V1    V1HeaderExtension `json:"V1"`
+	VTest VTHeaderExtension `json:"VTest"`
+}
+
+type HeaderExtension struct {
+	Enum HeaderExtensionEnum `json:"HeaderExtension"`
 }
 
 type Header struct {
-	ParentHash     Hash              `json:"parentHash"`
-	Number         BlockNumber       `json:"number"`
-	StateRoot      Hash              `json:"stateRoot"`
-	ExtrinsicsRoot KateExtrinsicRoot `json:"extrinsicsRoot"`
-	Digest         Digest            `json:"digest"`
-	AppDataLookup  DataLookup        `json:"appDataLookup"`
+	ParentHash     Hash            `json:"parentHash"`
+	Number         BlockNumber     `json:"number"`
+	StateRoot      Hash            `json:"stateRoot"`
+	ExtrinsicsRoot Hash            `json:"extrinsicsRoot"`
+	Digest         Digest          `json:"digest"`
+	Extension      HeaderExtension `json:"extension"`
 }
 
 type BlockNumber U32
@@ -87,4 +110,14 @@ func (b *BlockNumber) Decode(decoder scale.Decoder) error {
 	}
 	*b = BlockNumber(u.Uint64())
 	return err
+}
+
+func (a AppId) Decode(decoder scale.Decoder) error {
+	u := UCompact(a)
+	return u.Decode(decoder)
+}
+
+func (a AppId) Encode(encoder scale.Encoder) error {
+	u := UCompact(a)
+	return u.Encode(encoder)
 }

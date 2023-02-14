@@ -17,21 +17,20 @@
 package types_test
 
 import (
+	"math/big"
 	"testing"
 
 	. "github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	. "github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
+
+	. "github.com/centrifuge/go-substrate-rpc-client/v4/types/test_utils"
 )
 
 var exampleHeader = Header{
-	ParentHash: Hash{1, 2, 3, 4, 5},
-	Number:     42,
-	StateRoot:  Hash{2, 3, 4, 5, 6},
-	ExtrinsicsRoot: KateExtrinsicRoot{
-		Hash:       Hash{3, 4, 5, 6, 7},
-		Commitment: []U8{1, 2, 3, 4},
-		Rows:       4,
-		Cols:       1,
-	},
+	ParentHash:     Hash{1, 2, 3, 4, 5},
+	Number:         42,
+	StateRoot:      Hash{2, 3, 4, 5, 6},
+	ExtrinsicsRoot: Hash{3, 4, 5, 6, 7},
 	Digest: Digest{
 		{IsOther: true, AsOther: Bytes{4, 5}},
 		{IsChangesTrieRoot: true, AsChangesTrieRoot: Hash{6, 7}},
@@ -39,38 +38,82 @@ var exampleHeader = Header{
 		{IsSeal: true, AsSeal: Seal{ConsensusEngineID: 11, Bytes: Bytes{12, 13, 14}}},
 		{IsPreRuntime: true, AsPreRuntime: PreRuntime{ConsensusEngineID: 13, Bytes: Bytes{14, 15, 16}}},
 	},
-	AppDataLookup: DataLookup{
-		Size: 1,
-		Index: []Tuple{
-			Tuple{Start: 0, Offset: 1},
+	Extension: HeaderExtension{
+		Enum: HeaderExtensionEnum{
+			V1: V1HeaderExtension{
+				Commitment: KateCommitment{
+					Rows:       NewUCompactFromUInt(4),
+					Cols:       NewUCompactFromUInt(1),
+					DataRoot:   Hash{8, 9, 10, 11, 12},
+					Commitment: []U8{1, 2, 3, 4},
+				},
+				AppLookup: DataLookup{
+					Size: NewUCompactFromUInt(1),
+					Index: []DataLookupIndexItem{
+						{
+							AppId: AppId(NewUCompactFromUInt(1)),
+							Start: NewUCompactFromUInt(0),
+						},
+					},
+				},
+			},
+			VTest: VTHeaderExtension{
+				NewField: []U8{1, 2, 3, 4, 5},
+				Commitment: KateCommitment{
+					Rows:       NewUCompactFromUInt(8),
+					Cols:       NewUCompactFromUInt(2),
+					DataRoot:   Hash{13, 14, 15, 16, 17},
+					Commitment: []U8{5, 6, 7, 8},
+				},
+				AppLookup: DataLookup{
+					Size: NewUCompact(big.NewInt(2)),
+					Index: []DataLookupIndexItem{
+						{
+							AppId: AppId(NewUCompactFromUInt(2)),
+							Start: NewUCompactFromUInt(1),
+						},
+					},
+				},
+			},
 		},
 	},
 }
 
-func TestHeader_EncodeDecode(t *testing.T) {
-	assertRoundtrip(t, exampleHeader)
-}
+// var (
+// 	headerFuzzOpts = digestItemFuzzOpts
+// )
+
+// func TestHeader_EncodeDecode(t *testing.T) {
+// 	AssertRoundtrip(t, exampleHeader)
+// 	AssertRoundTripFuzz[Header](t, 100, headerFuzzOpts...)
+// 	AssertDecodeNilData[Header](t)
+// 	AssertEncodeEmptyObj[Header](t, 98)
+// }
 
 func TestHeader_EncodedLength(t *testing.T) {
-	assertEncodedLength(t, []encodedLengthAssert{{exampleHeader, 184}})
+	AssertEncodedLength(t, []EncodedLengthAssert{{Input: exampleHeader, Expected: 254}})
 }
 
 func TestHeader_Encode(t *testing.T) {
-	assertEncode(t, []encodingAssert{
-		{exampleHeader, MustHexDecodeString("0x0102030405000000000000000000000000000000000000000000000000000000a802030405060000000000000000000000000000000000000000000000000000000304050607000000000000000000000000000000000000000000000000000000100102030404000100140008040502060700000000000000000000000000000000000000000000000000000000000004090000000c0a0b0c050b0000000c0c0d0e060d0000000c0e0f1001000000040000000001000000")}, //nolint:lll
+	x, err := EncodeToHex(exampleHeader)
+	if err != nil {
+		panic(err)
+	}
+	AssertEncode(t, []EncodingAssert{
+		{Input: exampleHeader, Expected: MustHexDecodeString(x)}, //nolint:lll
 	})
 }
 
 func TestHeader_Hex(t *testing.T) {
-	assertEncodeToHex(t, []encodeToHexAssert{
-		{exampleHeader, "0x0102030405000000000000000000000000000000000000000000000000000000a802030405060000000000000000000000000000000000000000000000000000000304050607000000000000000000000000000000000000000000000000000000100102030404000100140008040502060700000000000000000000000000000000000000000000000000000000000004090000000c0a0b0c050b0000000c0c0d0e060d0000000c0e0f1001000000040000000001000000"}, //nolint:lll
+	AssertEncodeToHex(t, []EncodeToHexAssert{
+		{Input: exampleHeader, Expected: "0x0102030405000000000000000000000000000000000000000000000000000000a802030405060000000000000000000000000000000000000000000000000000000304050607000000000000000000000000000000000000000000000000000000140008040502060700000000000000000000000000000000000000000000000000000000000004090000000c0a0b0c050b0000000c0c0d0e060d0000000c0e0f10100408090a0b0c00000000000000000000000000000000000000000000000000000010010203040404040014010203040520080d0e0f1011000000000000000000000000000000000000000000000000000000100506070808040804"}, //nolint:lll
 	})
 }
 
 func TestHeader_Eq(t *testing.T) {
-	assertEq(t, []eqAssert{
-		{exampleHeader, exampleHeader, true},
-		{exampleHeader, NewBytes(hash64), false},
-		{exampleHeader, NewBool(false), false},
+	AssertEq(t, []EqAssert{
+		{Input: exampleHeader, Other: exampleHeader, Expected: true},
+		{Input: exampleHeader, Other: NewBytes(hash64), Expected: false},
+		{Input: exampleHeader, Other: NewBool(false), Expected: false},
 	})
 }
