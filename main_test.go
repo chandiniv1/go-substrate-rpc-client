@@ -49,7 +49,7 @@ func Example_simpleConnect() {
 	}
 
 	fmt.Printf("You are connected to chain %v using %v v%v\n", chain, nodeName, nodeVersion)
-	// Output: You are connected to chain Avail-Dev using Polygon Avail Node v1.5.0-4eb55aaa492
+	// Output: You are connected to chain Avail-Dev using Polygon Avail Node v1.5.0-5e286e34851
 }
 
 func Example_listenToNewBlocks() {
