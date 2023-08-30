@@ -22,15 +22,15 @@ import (
 	"time"
 
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
-	"github.com/centrifuge/go-substrate-rpc-client/v4/config"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/signature"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
 )
 
 func Example_simpleConnect() {
 	// The following example shows how to instantiate a Substrate API and use it to connect to a node
 
-	api, err := gsrpc.NewSubstrateAPI(config.Default().RPCURL)
+	api, err := gsrpc.NewSubstrateAPI("ws://127.0.0.1:9944")
 	if err != nil {
 		panic(err)
 	}
@@ -59,7 +59,7 @@ func Example_listenToNewBlocks() {
 	//
 	// NOTE: The example runs until 10 blocks are received or until you stop it with CTRL+C
 
-	api, err := gsrpc.NewSubstrateAPI(config.Default().RPCURL)
+	api, err := gsrpc.NewSubstrateAPI("ws://127.0.0.1:9944")
 	if err != nil {
 		panic(err)
 	}
@@ -90,7 +90,7 @@ func Example_listenToBalanceChange() {
 	//
 	// NOTE: The example runs until you stop it with CTRL+C
 
-	api, err := gsrpc.NewSubstrateAPI(config.Default().RPCURL)
+	api, err := gsrpc.NewSubstrateAPI("ws://127.0.0.1:9944")
 	if err != nil {
 		panic(err)
 	}
@@ -132,7 +132,7 @@ func Example_listenToBalanceChange() {
 			}
 
 			var acc types.AccountInfo
-			if err = types.DecodeFromBytes(chng.StorageData, &acc); err != nil {
+			if err = codec.Decode(chng.StorageData, &acc); err != nil {
 				panic(err)
 			}
 
@@ -157,7 +157,7 @@ func Example_unsubscribeFromListeningToUpdates() {
 	// In this example we're calling the built-in unsubscribe() function after a timeOut of 20s to cleanup and
 	// unsubscribe from listening to updates.
 
-	api, err := gsrpc.NewSubstrateAPI(config.Default().RPCURL)
+	api, err := gsrpc.NewSubstrateAPI("ws://127.0.0.1:9944")
 	if err != nil {
 		panic(err)
 	}
@@ -186,7 +186,7 @@ func Example_makeASimpleTransfer() {
 	// This sample shows how to create a transaction to make a transfer from one an account to another.
 
 	// Instantiate the API
-	api, err := gsrpc.NewSubstrateAPI(config.Default().RPCURL)
+	api, err := gsrpc.NewSubstrateAPI("ws://127.0.0.1:9944")
 	if err != nil {
 		panic(err)
 	}
@@ -245,6 +245,7 @@ func Example_makeASimpleTransfer() {
 		Nonce:              types.NewUCompactFromUInt(uint64(nonce)),
 		SpecVersion:        rv.SpecVersion,
 		Tip:                types.NewUCompactFromUInt(100),
+		AppID:              types.NewUCompactFromUInt(uint64(0)),
 		TransactionVersion: rv.TransactionVersion,
 	}
 
@@ -268,7 +269,7 @@ func Example_displaySystemEvents() {
 	// Query the system events and extract information from them. This example runs until exited via Ctrl-C
 
 	// Create our API with a default connection to the local node
-	api, err := gsrpc.NewSubstrateAPI(config.Default().RPCURL)
+	api, err := gsrpc.NewSubstrateAPI("ws://127.0.0.1:9944")
 	if err != nil {
 		panic(err)
 	}
@@ -295,7 +296,7 @@ func Example_displaySystemEvents() {
 		set := <-sub.Chan()
 		// inner loop for the changes within one of those notifications
 		for _, chng := range set.Changes {
-			if !types.Eq(chng.StorageKey, key) || !chng.HasStorageData {
+			if !codec.Eq(chng.StorageKey, key) || !chng.HasStorageData {
 				// skip, we are only interested in events with content
 				continue
 			}
@@ -365,11 +366,11 @@ func Example_displaySystemEvents() {
 				fmt.Printf("\tSession:NewSession:: (phase=%#v)\n", e.Phase)
 				fmt.Printf("\t\t%v\n", e.SessionIndex)
 			}
-			for _, e := range events.Staking_Reward {
+			for _, e := range events.Staking_Rewarded {
 				fmt.Printf("\tStaking:Reward:: (phase=%#v)\n", e.Phase)
 				fmt.Printf("\t\t%v\n", e.Amount)
 			}
-			for _, e := range events.Staking_Slash {
+			for _, e := range events.Staking_Slashed {
 				fmt.Printf("\tStaking:Slash:: (phase=%#v)\n", e.Phase)
 				fmt.Printf("\t\t%#x%v\n", e.AccountID, e.Balance)
 			}
@@ -403,7 +404,7 @@ func Example_transactionWithEvents() {
 	// Display the events that occur during a transfer by sending a value to bob
 
 	// Instantiate the API
-	api, err := gsrpc.NewSubstrateAPI(config.Default().RPCURL)
+	api, err := gsrpc.NewSubstrateAPI("ws://127.0.0.1:9944")
 	if err != nil {
 		panic(err)
 	}
@@ -460,6 +461,7 @@ func Example_transactionWithEvents() {
 		Nonce:              types.NewUCompactFromUInt(uint64(nonce)),
 		SpecVersion:        rv.SpecVersion,
 		Tip:                types.NewUCompactFromUInt(0),
+		AppID:              types.NewUCompactFromUInt(uint64(0)),
 		TransactionVersion: rv.TransactionVersion,
 	}
 

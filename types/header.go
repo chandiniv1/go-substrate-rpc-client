@@ -30,20 +30,22 @@ type DataLookup struct {
 	Index [][2]U32 `json:"index"`
 }
 
-type KateExtrinsicRoot struct {
-	Hash       Hash `json:"hash"`
-	Commitment []U8 `json:"commitment"`
-	Rows       U16  `json:"rows"`
-	Cols       U16  `json:"cols"`
+type HeaderExtensionEnum struct {
+	V1    V1HeaderExtension `json:"V1"`
+	VTest VTHeaderExtension `json:"VTest"`
+}
+
+type HeaderExtension struct {
+	Enum HeaderExtensionEnum `json:"HeaderExtension"`
 }
 
 type Header struct {
-	ParentHash     Hash              `json:"parentHash"`
-	Number         BlockNumber       `json:"number"`
-	StateRoot      Hash              `json:"stateRoot"`
-	ExtrinsicsRoot KateExtrinsicRoot `json:"extrinsicsRoot"`
-	Digest         Digest            `json:"digest"`
-	AppDataLookup  DataLookup        `json:"appDataLookup"`
+	ParentHash     Hash            `json:"parentHash"`
+	Number         BlockNumber     `json:"number"`
+	StateRoot      Hash            `json:"stateRoot"`
+	ExtrinsicsRoot Hash            `json:"extrinsicsRoot"`
+	Digest         Digest          `json:"digest"`
+	Extension      HeaderExtension `json:"extension"`
 }
 
 type BlockNumber U32
@@ -81,4 +83,14 @@ func (b *BlockNumber) Decode(decoder scale.Decoder) error {
 	}
 	*b = BlockNumber(u.Uint64())
 	return err
+}
+
+func (a AppId) Decode(decoder scale.Decoder) error {
+	u := UCompact(a)
+	return u.Decode(decoder)
+}
+
+func (a AppId) Encode(encoder scale.Encoder) error {
+	u := UCompact(a)
+	return u.Encode(encoder)
 }
