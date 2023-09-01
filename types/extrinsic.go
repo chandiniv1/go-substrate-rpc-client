@@ -148,7 +148,6 @@ func (e *Extrinsic) Sign(signer signature.KeyringPair, o SignatureOptions) error
 		},
 		AppID:              o.AppID,
 		TransactionVersion: o.TransactionVersion,
-		AppID:              o.AppID,
 	}
 
 	signerPubKey, err := NewMultiAddressFromAccountID(signer.PublicKey)
