@@ -101,7 +101,6 @@ type ExtrinsicPayloadV4 struct {
 	ExtrinsicPayloadV3
 	AppID              UCompact
 	TransactionVersion U32
-	AppID              UCompact
 }
 
 // Sign the extrinsic payload with the given derivation path
