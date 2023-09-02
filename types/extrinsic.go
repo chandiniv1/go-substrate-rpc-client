@@ -349,6 +349,6 @@ type SignaturePayload struct {
 	Nonce          UCompact
 	RuntimeVersion RuntimeVersion
 	Tip            UCompact
-	AppID          U32
+	AppID          UCompact
 	Version        uint8
 }

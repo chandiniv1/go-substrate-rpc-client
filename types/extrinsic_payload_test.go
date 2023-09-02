@@ -38,7 +38,7 @@ func TestExtrinsicPayload(t *testing.T) {
 			Era:         era,
 			Nonce:       NewUCompactFromUInt(4660),
 			Tip:         NewUCompactFromUInt(22136),
-			AppID:       NewU32(0),
+			AppID:       NewUCompactFromUInt(0),
 			SpecVersion: 123,
 			GenesisHash: NewHash(MustHexDecodeString("0xdcd1346701ca8396496e52aa2785b1748deb6db09551b72159dcb3e08991025b")),
 			BlockHash:   NewHash(MustHexDecodeString("0xde8f69eeb5e065e18c6950ff708d7e551f68dc9bf59a07c52367c0280f805ec7")),
